@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>REI DO APK TV</title>
+    <style>
+        :root { --neon: #00ff88; --bg: #050505; }
+        
+        body { 
+            margin: 0; 
+            background-color: var(--bg);
+            /* Configurações para a imagem de fundo ser nítida */
+            background-position: center;
+            background-repeat: no-repeat;
+            background-size: cover;
+            background-attachment: fixed;
+            color: white; 
+            font-family: sans-serif; 
+            overflow: hidden; 
+        }
+
+        /* Camada para garantir que o fundo não tenha filtro escuro */
+        #bg-layer {
+            position: fixed;
+            inset: 0;
+            z-index: -1;
+            background-image: var(--bg-custom);
+            background-size: cover;
+            background-position: center;
+        }
+
+        /* INTRO EXPLOSIVA */
+        #intro-screen {
+            position: fixed; inset: 0; background: black; z-index: 1000;
+            display: flex; align-items: center; justify-content: center; overflow: hidden;
+        }
+        #intro-text {
+            font-size: 3rem; color: var(--neon); font-weight: bold;
+            transition: transform 3s cubic-bezier(0.9, 0, 1, 1);
+        }
+        .icon-flutuante {
+            position: absolute; font-size: 2rem; opacity: 0;
+        }
+
+        /* CONTAINER PRINCIPAL */
+        #app-content { display: none; height: 100vh; flex-direction: column; position: relative; z-index: 1; }
+
+        /* CARROSSEL DE CANAIS */
+        .carousel {
+            display: flex; overflow-x: auto; scroll-snap-type: x mandatory;
+            height: 80vh; align-items: center; scroll-behavior: smooth;
+        }
+        .carousel::-webkit-scrollbar { display: none; }
+        .channel-card {
+            min-width: 100vw; height: 100%; display: flex; flex-direction: column;
+            align-items: center; justify-content: center; scroll-snap-align: start;
+        }
+        .poster {
+            width: 80%; max-width: 400px; border-radius: 15px; border: 3px solid var(--neon);
+            box-shadow: 0 0 20px rgba(0, 255, 136, 0.5); cursor: pointer; transition: 0.3s;
+            background: black; /* Fundo do poster caso a imagem falhe */
+        }
+        .poster:hover { transform: scale(1.05); }
+
+        /* PLAYER DE VÍDEO */
+        #video-container {
+            position: fixed; inset: 0; background: black; display: none; z-index: 500;
+        }
+        iframe { width: 100%; height: 100%; border: none; }
+        #btn-voltar {
+            position: absolute; top: 20px; left: 20px; z-index: 600;
+            background: var(--neon); color: black; border: none; padding: 10px 20px;
+            font-weight: bold; border-radius: 5px; cursor: pointer;
+        }
+
+        /* LETREIRO DINÂMICO */
+        #letreiro {
+            position: absolute; bottom: 50px; width: 100%; background: rgba(0,0,0,0.7);
+            color: var(--neon); padding: 10px; font-weight: bold; white-space: nowrap;
+            overflow: hidden; display: none;
+        }
+        .marquee-text { display: inline-block; animation: scroll 10s linear infinite; }
+        @keyframes scroll { from { transform: translateX(100%); } to { transform: translateX(-100%); } }
+
+        /* BOTÃO WHATSAPP */
+        #btn-zap {
+            position: fixed; bottom: 20px; width: 100%; display: flex; justify-content: center;
+        }
+        .zap-link {
+            background: #25d366; color: white; text-decoration: none;
+            padding: 12px 30px; border-radius: 30px; font-weight: bold;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+        }
+
+        /* PAINEL ADMIN SEGRETO */
+        #admin-panel {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 2000;
+            display: none; padding: 20px; overflow-y: auto;
+        }
+        input { width: 100%; padding: 12px; margin: 8px 0; background: #222; color: white; border: 1px solid var(--neon); border-radius: 5px; box-sizing: border-box;}
+        h2, h3 { color: var(--neon); }
+    </style>
+</head>
+<body>
+
+    <div id="bg-layer"></div>
+
+    <div id="intro-screen">
+        <div id="intro-text">REI DO APK</div>
+    </div>
+
+    <audio id="bg-music" loop>
+        <source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" type="audio/mpeg">
+    </audio>
+
+    <div id="app-content">
+        <div class="carousel" id="carousel"></div>
+
+        <div id="btn-zap">
+            <a href="#" id="link-zap" class="zap-link" target="_blank">GRUPO WHATSAPP</a>
+        </div>
+    </div>
+
+    <div id="video-container">
+        <button id="btn-voltar" onclick="fecharPlayer()">VOLTAR / CATEGORIA</button>
+        <iframe id="video-player" src="" allowfullscreen></iframe>
+        <div id="letreiro"><div class="marquee-text">REI DO APK - O MELHOR CONTEÚDO SEMPRE!</div></div>
+    </div>
+
+    <div id="admin-panel">
+        <h2>Configurações (Privado)</h2>
+        <div id="admin-inputs">
+            <h3>Imagem de Fundo do App</h3>
+            <input id="adm-bg" placeholder="Link da Imagem de Fundo (Nítida)">
+            
+            <h3>Link WhatsApp</h3>
+            <input id="adm-zap">
+            
+            <div id="https://embed.bugoumods.com/?api=1"></div>
+        </div>
+        <hr border="1" color="#00ff88">
+        <button onclick="salvarConfig()" style="background: var(--neon); padding: 15px; border: none; cursor: pointer; font-weight: bold; border-radius: 5px; margin-right: 10px;">SALVAR TUDO</button>
+        <button onclick="fecharAdmin()" style="background: #ff4444; padding: 15px; border: none; cursor: pointer; color: white; font-weight: bold; border-radius: 5px;">FECHAR</button>
+    </div>
+
+<script>
+    // Carrega configurações ou usa padrão
+    let config = JSON.parse(localStorage.getItem('tv_config')) || {
+        bgApp: "https://i.supaimg.com/f39afda8-6b2e-4cf2-8ab9-b80ced5e2c75/ea4e5f51-4551-4889-85fd-ea25cfe87359.png", // Exemplo de imagem nítida
+        zap: "https://chat.whatsapp.com/DbsWaoJDHiH4b6kiOTMk32?mode=gi_t",
+        canais: [
+            { img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQvSV8TL4mCtR_VECNqC4roLTPZomoYowm_DTAAF5VnIA&s", video: "https://www3.embedtv.best/pt_sportv1" },
+            { img: "https://static.wikia.nocookie.net/tvpediabrasil/images/a/a2/Logo_Premiere_FC_2018.png/revision/latest?cb=20180423205957&path-prefix=pt-br", video: "https://www3.embedtv.best/premiere" },
+            { img: "https://rd1.com.br/wp-content/uploads/2024/04/sportv-logo.jpg", video: "https://www3.embedtv.best/pt_sportv1" },
+            { img: "https://www.meioemensagem.com.br/wp-content/uploads/2016/04/Combate_3D_Com_Slogan_Fundo_Escuro-300.jpg", video: "https://www3.embedtv.best/combate" },
+            { img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQn4baYKEJ3ZJFHeEYTZlGJxz5hQz1TmfpPVjNAO0LrI26yPp3yRRhsRHGl&s=10", video: "https://www3.embedtv.best/pt_eleven1" }
+        ]
+    };
+
+    // Aplica o fundo nítido imediatamente
+    function aplicarFundo() {
+        document.getElementById('bg-layer').style.backgroundImage = `url('${config.bgApp}')`;
+    }
+
+    window.onload = () => {
+        aplicarFundo();
+        const text = document.getElementById('intro-text');
+        const screen = document.getElementById('intro-screen');
+        
+        setTimeout(() => {
+            text.style.transform = "scale(50)";
+            text.style.opacity = "0";
+            criarIconesFlutuantes();
+        }, 1000);
+
+        setTimeout(() => {
+            screen.style.display = 'none';
+            document.getElementById('app-content').style.display = 'flex';
+            const playPromise = document.getElementById('bg-music').play();
+            if (playPromise !== undefined) {
+                playPromise.catch(() => { console.log("Som aguardando interação"); });
+            }
+            renderCanais();
+        }, 3500);
+    };
+
+    function criarIconesFlutuantes() {
+        for(let i=0; i<30; i++){
+            const icon = document.createElement('div');
+            icon.className = 'icon-flutuante';
+            icon.innerHTML = '📱';
+            icon.style.left = Math.random() * 100 + 'vw';
+            icon.style.top = Math.random() * 100 + 'vh';
+            document.getElementById('intro-screen').appendChild(icon);
+            icon.animate([{ opacity: 1, transform: 'scale(0)' }, { opacity: 0, transform: 'scale(3)' }], { duration: 1000 });
+        }
+    }
+
+    function renderCanais() {
+        const carousel = document.getElementById('carousel');
+        carousel.innerHTML = '';
+        document.getElementById('link-zap').href = config.zap;
+
+        config.canais.forEach((canal, index) => {
+            const card = document.createElement('div');
+            card.className = 'channel-card';
+            card.innerHTML = `<img src="${canal.img}" class="poster" onclick="abrirPlayer('${canal.video}')">`;
+            carousel.appendChild(card);
+        });
+    }
+
+    function abrirPlayer(link) {
+        const player = document.getElementById('video-container');
+        document.getElementById('video-player').src = link;
+        player.style.display = 'block';
+        setTimeout(() => { document.getElementById('letreiro').style.display = 'block'; }, 60000);
+    }
+
+    function fecharPlayer() {
+        document.getElementById('video-container').style.display = 'none';
+        document.getElementById('video-player').src = '';
+        document.getElementById('letreiro').style.display = 'none';
+    }
+
+    // Atalho 'A' para Admin
+    window.addEventListener('keydown', (e) => {
+        if(e.key.toLowerCase() === 'a') {
+            const senha = prompt("Senha Administrativa:");
+            if(senha === "1234") {
+                gerarInputsAdmin();
+                document.getElementById('admin-panel').style.display = 'block';
+            }
+        }
+    });
+
+    function gerarInputsAdmin() {
+        document.getElementById('adm-bg').value = config.bgApp;
+        document.getElementById('adm-zap').value = config.zap;
+        const canaisDiv = document.getElementById('canais-inputs');
+        canaisDiv.innerHTML = "";
+        config.canais.forEach((c, i) => {
+            canaisDiv.innerHTML += `
+                <h3>Canal ${i+1}</h3>
+                <input id="img-${i}" placeholder="Link Imagem Poster" value="${c.img}">
+                <input id="vid-${i}" placeholder="Link Vídeo (YouTube Embed)" value="${c.video}">
+            `;
+        });
+    }
+
+    function fecharAdmin() { document.getElementById('admin-panel').style.display = 'none'; }
+
+    function salvarConfig() {
+        config.bgApp = document.getElementById('adm-bg').value;
+        config.zap = document.getElementById('adm-zap').value;
+        config.canais.forEach((c, i) => {
+            c.img = document.getElementById(`img-${i}`).value;
+            c.video = document.getElementById(`vid-${i}`).value;
+        });
+        localStorage.setItem('tv_config', JSON.stringify(config));
+        aplicarFundo();
+        renderCanais();
+        alert("Configurações Salvas com Sucesso!");
+        fecharAdmin();
+    }
+</script>
+</body>
+</html>
